@@ -1,0 +1,265 @@
+//
+//  ListingDetailView.swift
+//  AirBnbClone
+//
+//  Created by Srimathi  Vadivel  on 6/2/24.
+//
+
+import SwiftUI
+import MapKit
+
+struct ListingDetailView: View {
+    @Environment(\.dismiss) var dismiss
+    let listing: Listing
+    @State private var cameraPosition: MapCameraPosition
+    
+    func formatRating(_ rating: Double) -> String {
+          let formatter = NumberFormatter()
+          formatter.numberStyle = .decimal
+          formatter.maximumFractionDigits = 2
+          formatter.usesSignificantDigits = true
+          return formatter.string(from: NSNumber(value: rating)) ?? "\(rating)"
+      }
+    
+    init(listing: Listing) {
+        self.listing = listing
+
+        let city = listing.city.lowercased()
+        let region: MKCoordinateRegion
+
+        switch city {
+        case "miami":
+            region = MKCoordinateRegion(center: .miami, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        case "los angeles":
+            region = MKCoordinateRegion(center: .losAngeles, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        case "new york":
+            region = MKCoordinateRegion(center: .newYork, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        case "atlanta":
+            region = MKCoordinateRegion(center: .atlanta, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        case "chicago":
+            region = MKCoordinateRegion(center: .chicago, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        case "houston":
+            region = MKCoordinateRegion(center: .houston, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        case "washington d.c.":
+            region = MKCoordinateRegion(center: .washingtonDC, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        case "miami beach":
+            region = MKCoordinateRegion(center: .miamiBeach, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        case "las vegas":
+            region = MKCoordinateRegion(center: .lasVegas, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        case "seattle":
+            region = MKCoordinateRegion(center: .seattle, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        default:
+            region = MKCoordinateRegion(center: .miami, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+        }
+
+        self._cameraPosition = State(initialValue: .region(region))
+    }
+    
+    var body: some View {
+        ScrollView {
+            ZStack(alignment: .topLeading) {
+                ListingImageCarouselView(listing: listing)
+                    .frame(height: 320)
+                
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .foregroundStyle(.black)
+                        .background {
+                            Circle()
+                                .fill(.white)
+                                .frame(width: 32, height: 32)
+                        }
+                        .padding(32)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text(listing.title)
+                    .font(.title)
+                    .fontWeight(.semibold)
+                
+                VStack(alignment: .leading) {
+                    HStack(spacing: 2) {
+                        Image(systemName: "star.fill")
+                        
+                        Text(formatRating(listing.rating))
+
+                        Text( " - ")
+                        
+                        Text("28 Reviews")
+                            .underline()
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundStyle(.black)
+                    
+                    Text("\(listing.city), \(listing.state)")
+                }
+                .font(.caption)
+            }
+            .padding(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Divider()
+            
+            //Host info
+            
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Entire \(listing.type.description) hosted by \(listing.ownerName)")
+                        .font(.headline)
+                        .frame(width: 250, alignment: .leading)
+                    
+                    HStack(spacing: 2){
+                        Text("\(listing.numberOfGuests) guests - ")
+                        Text("\(listing.numberOfBedrooms) Bedrooms - ")
+                        Text("\(listing.numberOfBeds) Beds - ")
+                        Text("\(listing.numberOfBathrooms) Baths")
+                    }
+                    .font(.caption)
+                }
+                .frame(width:300, alignment: .leading)
+                
+                Spacer()
+                
+                Image(listing.ownerImageUrl)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 64, height: 64)
+                    .clipShape(Circle())
+            }
+            .padding()
+            
+            Divider()
+            
+            // Listing features
+            
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(listing.features) { feature in
+                    HStack(spacing: 12) {
+                        Image(systemName: feature.imageName)
+                        
+                        VStack(alignment: .leading) {
+                            Text(feature.title)
+                                .font(.footnote)
+                                .fontWeight(.semibold)
+                            
+                            Text(feature.subtitle)
+                                .font(.caption)
+                                .foregroundStyle(.gray)
+                        }
+                        
+                        Spacer()
+                    }
+                }
+            }
+            //.frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            
+            Divider()
+            
+            //Bedrooms
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Where you'll sleep")
+                    .font(.headline)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(1 ..< listing.numberOfBedrooms, id: \.self) { bedroom in
+                            VStack {
+                                Image(systemName: "bed.double")
+                                
+                                Text("Bedroom \(bedroom)")
+                            }
+                            .frame(width: 132, height: 100)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(lineWidth: 1)
+                                    .foregroundStyle(.gray)
+                            }
+                        }
+                    }
+                }
+                .scrollTargetBehavior(.paging)
+            }
+            .padding()
+            
+            Divider()
+            
+            // Listing amenities
+            VStack(alignment: .leading, spacing: 16) {
+                Text("What this place offers")
+                    .font(.headline)
+                
+                ForEach(listing.amenities) { amenity in
+                    HStack {
+                        Image(systemName: amenity.imageName)
+                            .frame(width: 32)
+                        
+                        Text(amenity.title)
+                            .font(.footnote)
+                        
+                        Spacer()
+                    }
+                }
+            }
+            .padding()
+            
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Where you'll be")
+                    .font(.headline)
+                
+                Map(position: $cameraPosition)
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .padding()
+        }
+        .toolbar(.hidden, for: .tabBar)
+        .ignoresSafeArea()
+        .padding(.bottom, 64)
+        .overlay(alignment: .bottom) {
+            VStack {
+                Divider()
+                    .padding(.bottom)
+                
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("$\(listing.pricePerNight)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        
+                        Text("Total before taxes")
+                            .font(.footnote)
+
+                        Text("Oct 15 - 20")
+                            .font(.footnote)
+                            .fontWeight(.semibold)
+                            .underline()
+                    }
+                    
+                    Spacer()
+                    
+                    Button {
+                        
+                    } label: {
+                        Text("Reserve")
+                            .foregroundStyle(.white)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .frame(width: 140, height: 40)
+                            .background(.pink)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+                .padding(.horizontal, 32)
+            }
+            .background(.white)
+        }
+    }
+}
+
+#Preview {
+    ListingDetailView(listing: DeveloperPreview.shared.listings[3])
+}
